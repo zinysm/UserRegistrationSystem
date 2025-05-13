@@ -29,22 +29,18 @@ namespace API.Controllers
             return Guid.Parse(userIdString!);
         }
 
-        [HttpPost("Create")]
-        [Authorize]
-        public async Task<IActionResult> UploadPersonInfo([FromForm] PersonCreateDto form)
+        /// <summary>
+        /// Sukuria naują profilio įrašą su nuotrauka.
+        /// </summary>
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateProfile([FromForm] PersonCreateForm form)
         {
-            if (form.ProfileImage == null || form.ProfileImage.Length == 0)
-                return BadRequest("Profile image is required.");
-
-            if (!form.ProfileImage.ContentType.Contains("jpeg"))
-                return BadRequest("Only .jpg or .jpeg files are allowed.");
+            var userId = GetUserId();
 
             using var stream = form.ProfileImage.OpenReadStream();
             var imageBytes = await _imageService.ProcessImageAsync(stream, form.ProfileImage.FileName);
 
-            var userId = GetUserId();
-
-            var personDto = new PersonDto
+            var dto = new PersonCreateDto
             {
                 FirstName = form.FirstName,
                 LastName = form.LastName,
@@ -61,59 +57,38 @@ namespace API.Controllers
                 }
             };
 
-            await _personService.UploadPersonInfoAsync(userId, personDto);
-            return Ok("Profile uploaded successfully.");
+            await _personService.UploadPersonInfoAsync(userId, dto);
+            return Ok("Profile created.");
         }
 
-
-        [HttpGet]
-        public async Task<IActionResult> GetProfile()
+        /// <summary>
+        /// Atnaujina profilio duomenis (be nuotraukos).
+        /// </summary>
+        [HttpPut]
+        public async Task<IActionResult> UpdateProfile([FromForm] PersonUpdateForm form)
         {
             var userId = GetUserId();
-            var user = await _personService.GetPersonByIdAsync(userId);
-            return Ok(user);
+
+            var dto = new PersonUpdateDto
+            {
+                FirstName = form.FirstName,
+                LastName = form.LastName,
+                PhoneNumber = form.PhoneNumber,
+                Email = form.Email,
+                City = form.City,
+                Street = form.Street,
+                HouseNumber = form.HouseNumber,
+                ApartmentNumber = form.ApartmentNumber
+            };
+
+            await _personService.UpdatePartialInfoAsync(userId, dto);
+
+            return Ok("Profile updated.");
         }
 
-        [HttpPut("firstname")]
-        public async Task<IActionResult> UpdateFirstName([FromBody] string newFirstName)
-        {
-            var userId = GetUserId();
-            await _personService.UpdateFirstNameAsync(userId, newFirstName);
-            return Ok("First name updated.");
-        }
-
-        [HttpPut("lastname")]
-        public async Task<IActionResult> UpdateLastName([FromBody] string newLastName)
-        {
-            var userId = GetUserId();
-            await _personService.UpdateLastNameAsync(userId, newLastName);
-            return Ok("Last name updated.");
-        }
-
-        [HttpPut("personalcode")]
-        public async Task<IActionResult> UpdatePersonalCode([FromBody] string newCode)
-        {
-            var userId = GetUserId();
-            await _personService.UpdatePersonalCodeAsync(userId, newCode);
-            return Ok("Personal code updated.");
-        }
-
-        [HttpPut("phonenumber")]
-        public async Task<IActionResult> UpdatePhoneNumber([FromBody] string newNumber)
-        {
-            var userId = GetUserId();
-            await _personService.UpdatePhoneNumberAsync(userId, newNumber);
-            return Ok("Phone number updated.");
-        }
-
-        [HttpPut("email")]
-        public async Task<IActionResult> UpdateEmail([FromBody] string newEmail)
-        {
-            var userId = GetUserId();
-            await _personService.UpdateEmailAsync(userId, newEmail);
-            return Ok("Email updated.");
-        }
-
+        /// <summary>
+        /// Atnaujina tik profilio nuotrauką.
+        /// </summary>
         [HttpPut("profileimage")]
         public async Task<IActionResult> UpdateImage([FromForm] IFormFile file)
         {
@@ -126,36 +101,15 @@ namespace API.Controllers
             return Ok("Profile image updated.");
         }
 
-        [HttpPut("city")]
-        public async Task<IActionResult> UpdateCity([FromBody] string city)
+        /// <summary>
+        /// Gražina visą profilio informaciją.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetProfile()
         {
             var userId = GetUserId();
-            await _addressService.UpdateCityAsync(userId, city);
-            return Ok("City updated.");
-        }
-
-        [HttpPut("street")]
-        public async Task<IActionResult> UpdateStreet([FromBody] string street)
-        {
-            var userId = GetUserId();
-            await _addressService.UpdateStreetAsync(userId, street);
-            return Ok("Street updated.");
-        }
-
-        [HttpPut("house-number")]
-        public async Task<IActionResult> UpdateHouseNumber([FromBody] string number)
-        {
-            var userId = GetUserId();
-            await _addressService.UpdateHouseNumberAsync(userId, number);
-            return Ok("House number updated.");
-        }
-
-        [HttpPut("apartment-number")]
-        public async Task<IActionResult> UpdateApartmentNumber([FromBody] string? number)
-        {
-            var userId = GetUserId();
-            await _addressService.UpdateApartmentNumberAsync(userId, number);
-            return Ok("Apartment number updated.");
+            var user = await _personService.GetPersonByIdAsync(userId);
+            return Ok(user);
         }
     }
 }

@@ -4,12 +4,8 @@ namespace UserRegistrations.Application.Interfaces;
 
 public interface IPersonService
 {
-    Task UploadPersonInfoAsync(Guid userId, PersonDto dto);
-    Task<PersonDto> GetPersonByIdAsync(Guid personId);
-    Task UpdateFirstNameAsync(Guid userId, string newFirstName);
-    Task UpdateLastNameAsync(Guid userId, string newLastName);
-    Task UpdatePersonalCodeAsync(Guid userId, string newPersonalCode);
-    Task UpdatePhoneNumberAsync(Guid userId, string newPhoneNumber);
-    Task UpdateEmailAsync(Guid userId, string newEmail);
-    Task UpdateProfileImageAsync(Guid userId, byte[] newImage);
+    Task UploadPersonInfoAsync(Guid userId, PersonCreateDto dto);
+    Task<PersonCreateDto> GetPersonByIdAsync(Guid userId);
+    Task UpdateProfileImageAsync(Guid userId, byte[] image);
+    Task UpdatePartialInfoAsync(Guid userId, PersonUpdateDto dto);
 }
