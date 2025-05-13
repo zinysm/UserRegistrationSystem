@@ -2,9 +2,10 @@
 using UserRegistrations.Application.DTOs;
 
 namespace UserRegistrations.Application.Validators;
-public class PersonValidator : AbstractValidator<PersonDto>
+
+public class PersonCreateDtoValidator : AbstractValidator<PersonCreateDto>
 {
-    public PersonValidator()
+    public PersonCreateDtoValidator()
     {
         RuleFor(x => x.FirstName).NotEmpty().WithMessage("First name is required.");
         RuleFor(x => x.LastName).NotEmpty().WithMessage("Last name is required.");
@@ -19,9 +20,8 @@ public class PersonValidator : AbstractValidator<PersonDto>
             .NotEmpty().WithMessage("Email is required.")
             .EmailAddress().WithMessage("Email format is invalid.");
 
-        RuleFor(x => x.ProfileImage).NotNull().WithMessage("Profile image is required.");
-
-        RuleFor(x => x.Address).SetValidator(new AddressValidator());
+        RuleFor(x => x.City).NotEmpty().WithMessage("City is required.");
+        RuleFor(x => x.Street).NotEmpty().WithMessage("Street is required.");
+        RuleFor(x => x.HouseNumber).NotEmpty().WithMessage("House number is required.");
     }
 }
-

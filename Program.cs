@@ -9,6 +9,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using UserRegistrations.Application.Interfaces;
 using UserRegistrations.Application.Services;
+using UserRegistrations.Application.Validators;
 using UserRegistrations.Domain.Interfaces;
 using UserRegistrations.Infrastucture.Repositories;
 using UserRegistrations.Infrastucture.Services;
@@ -32,7 +33,7 @@ builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 
 // 4. Add FluentValidation
-builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 

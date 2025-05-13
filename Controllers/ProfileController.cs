@@ -29,13 +29,42 @@ namespace API.Controllers
             return Guid.Parse(userIdString!);
         }
 
-        [HttpPost("upload")]
-        public async Task<IActionResult> UploadPersonInfo([FromBody] PersonDto dto)
+        [HttpPost("Create")]
+        [Authorize]
+        public async Task<IActionResult> UploadPersonInfo([FromForm] PersonCreateDto form)
         {
+            if (form.ProfileImage == null || form.ProfileImage.Length == 0)
+                return BadRequest("Profile image is required.");
+
+            if (!form.ProfileImage.ContentType.Contains("jpeg"))
+                return BadRequest("Only .jpg or .jpeg files are allowed.");
+
+            using var stream = form.ProfileImage.OpenReadStream();
+            var imageBytes = await _imageService.ProcessImageAsync(stream, form.ProfileImage.FileName);
+
             var userId = GetUserId();
-            await _personService.UploadPersonInfoAsync(userId, dto);
-            return Ok("Person info uploaded.");
+
+            var personDto = new PersonDto
+            {
+                FirstName = form.FirstName,
+                LastName = form.LastName,
+                PersonalCode = form.PersonalCode,
+                PhoneNumber = form.PhoneNumber,
+                Email = form.Email,
+                ProfileImage = imageBytes,
+                Address = new AddressDto
+                {
+                    City = form.City,
+                    Street = form.Street,
+                    HouseNumber = form.HouseNumber,
+                    ApartmentNumber = form.ApartmentNumber
+                }
+            };
+
+            await _personService.UploadPersonInfoAsync(userId, personDto);
+            return Ok("Profile uploaded successfully.");
         }
+
 
         [HttpGet]
         public async Task<IActionResult> GetProfile()
