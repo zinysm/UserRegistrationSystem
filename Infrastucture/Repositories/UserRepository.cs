@@ -21,6 +21,7 @@ public class UserRepository : IUserRepository
             .ThenInclude(p => p.Address)
             .ToListAsync();
     }
+
     public async Task<User?> GetByIdAsync(Guid id)
     {
         return await _context.Users
@@ -44,6 +45,7 @@ public class UserRepository : IUserRepository
 
     public async Task DeleteAsync(User user)
     {
+
         _context.Users.Remove(user);
         await Task.CompletedTask;
     }

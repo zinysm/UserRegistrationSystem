@@ -26,6 +26,7 @@ public class DataSeeder
     {
         var username = _configuration["AdminSeed:Username"];
         var password = _configuration["AdminSeed:Password"];
+        var idText = _configuration["AdminSeed:Id"];
 
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             throw new Exception("Admin seed configuration is missing.");
@@ -33,12 +34,13 @@ public class DataSeeder
         var existing = await _userRepository.GetByUsernameAsync(username);
         if (existing != null) return;
 
+        Guid.TryParse(idText, out var adminId);
         var salt = _passwordHasher.GenerateSalt();
         var hash = _passwordHasher.HashPassword(password, salt);
 
         var user = new User
         {
-            Id = Guid.NewGuid(),
+            Id = adminId == Guid.Empty ? Guid.NewGuid() : adminId,
             Username = username,
             Salt = salt,
             PasswordHash = hash,
