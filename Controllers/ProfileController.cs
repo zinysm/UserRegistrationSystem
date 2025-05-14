@@ -75,10 +75,13 @@ namespace API.Controllers
                 LastName = form.LastName,
                 PhoneNumber = form.PhoneNumber,
                 Email = form.Email,
-                City = form.City,
-                Street = form.Street,
-                HouseNumber = form.HouseNumber,
-                ApartmentNumber = form.ApartmentNumber
+                Address = new AddressDto
+                {
+                    City = form.City,
+                    Street = form.Street,
+                    HouseNumber = form.HouseNumber,
+                    ApartmentNumber = form.ApartmentNumber
+                }
             };
 
             await _personService.UpdatePartialInfoAsync(userId, dto);

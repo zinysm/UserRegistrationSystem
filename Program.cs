@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Application.Interfaces;
 using Infrastructure.Auth;
 using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -26,6 +27,8 @@ builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<ImageService>(); // klas? be interfeiso
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+
 
 // 3. Add repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();

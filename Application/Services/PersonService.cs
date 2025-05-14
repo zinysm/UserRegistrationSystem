@@ -106,17 +106,17 @@ public class PersonService : IPersonService
         var address = person.Address;
         if (address != null)
         {
-            if (!string.IsNullOrWhiteSpace(dto.City))
-                address.City = dto.City;
+            if (!string.IsNullOrWhiteSpace(dto.Address.City))
+                address.City = dto.Address.City;
 
-            if (!string.IsNullOrWhiteSpace(dto.Street))
-                address.Street = dto.Street;
+            if (!string.IsNullOrWhiteSpace(dto.Address.Street))
+                address.Street = dto.Address.Street;
 
-            if (!string.IsNullOrWhiteSpace(dto.HouseNumber))
-                address.HouseNumber = dto.HouseNumber;
+            if (!string.IsNullOrWhiteSpace(dto.Address.HouseNumber))
+                address.HouseNumber = dto.Address.HouseNumber;
 
-            if (!string.IsNullOrWhiteSpace(dto.ApartmentNumber))
-                address.ApartmentNumber = dto.ApartmentNumber;
+            if (!string.IsNullOrWhiteSpace(dto.Address.ApartmentNumber))
+                address.ApartmentNumber = dto.Address.ApartmentNumber;
         }
 
         await _userRepository.SaveChangesAsync();
