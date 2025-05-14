@@ -14,33 +14,38 @@ using UserRegistrations.Application.Validators;
 using UserRegistrations.Domain.Interfaces;
 using UserRegistrations.Infrastucture.Repositories;
 using UserRegistrations.Infrastucture.Services;
+using UserRegistrations.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add DbContext
+#region Services: Application & Infrastructure
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. Add application services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<ImageService>(); // klas? be interfeiso
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<ImageService>();
 
-
-// 3. Add repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 
-// 4. Add FluentValidation
+#endregion
+
+#region Services: Validation
+
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 
-// 5. Add authentication (JWT)
+#endregion
+
+#region Services: Authentication & Authorization
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -59,14 +64,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// 6. Add controllers + Swagger
+#endregion
+
+#region Services: Swagger
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "User Registration API", Version = "v1" });
 
-    // Enable JWT in Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "Enter 'Bearer' followed by your JWT token",
@@ -92,9 +99,28 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+#endregion
+
+#region Services: Seeder
+
+builder.Services.AddScoped<DataSeeder>();
+
+#endregion
+
 var app = builder.Build();
 
-// 7. Configure middleware
+#region Admin Seed Execution
+
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+    await seeder.SeedAdminAsync();
+}
+
+#endregion
+
+#region Middleware
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -107,5 +133,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+#endregion
 
 app.Run();

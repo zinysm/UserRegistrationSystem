@@ -14,6 +14,13 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
+    public async Task<List<User>> GetAllAsync()
+    {
+        return await _context.Users
+            .Include(u => u.Person)
+            .ThenInclude(p => p.Address)
+            .ToListAsync();
+    }
     public async Task<User?> GetByIdAsync(Guid id)
     {
         return await _context.Users

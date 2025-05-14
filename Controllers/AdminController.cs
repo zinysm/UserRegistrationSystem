@@ -1,33 +1,89 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using UserRegistrations.Application.Interfaces;
+using UserRegistrations.Domain.Enums;
+using UserRegistrations.Domain.Interfaces;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize(Roles = "Admin")]
+public class AdminController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
-    public class AdminController : ControllerBase
+    private readonly IUserRepository _userRepository;
+
+    public AdminController(IUserRepository userRepository)
     {
-        private readonly IUserService _userService;
+        _userRepository = userRepository;
+    }
 
-        public AdminController(IUserService userService)
-        {
-            _userService = userService;
-        }
+    [HttpGet("users")]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        var users = await _userRepository.GetAllAsync(); 
 
-        [HttpDelete("delete-user/{id}")]
-        public async Task<IActionResult> DeleteUser(Guid id)
+        var result = users.Select(u => new
         {
-            try
+            u.Id,
+            u.Username,
+            Role = u.Role.ToString(),
+            HasProfile = u.Person != null
+        });
+
+        return Ok(result);
+    }
+
+    [HttpGet("user/{id}")]
+    public async Task<IActionResult> GetUserProfile(Guid id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user == null || user.Person == null)
+            return NotFound("User or profile not found");
+
+        var person = user.Person;
+        return Ok(new
+        {
+            person.FirstName,
+            person.LastName,
+            person.PersonalCode,
+            person.PhoneNumber,
+            person.Email,
+            Address = new
             {
-                await _userService.DeleteUserAsync(id);
-                return Ok($"User with ID {id} deleted successfully.");
+                person.Address.City,
+                person.Address.Street,
+                person.Address.HouseNumber,
+                person.Address.ApartmentNumber
             }
-            catch (Exception ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
-        }
+        });
+    }
+
+    [HttpPut("user/{id}/role")]
+    public async Task<IActionResult> ChangeUserRole(Guid id, [FromBody] string role)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user == null)
+            return NotFound("User not found");
+
+        if (!Enum.TryParse<RoleType>(role, true, out var parsedRole))
+            return BadRequest("Invalid role type");
+
+        user.Role = parsedRole;
+        await _userRepository.SaveChangesAsync();
+
+        return Ok($"User role updated to {parsedRole}");
+    }
+
+    [HttpDelete("user/{id}")]
+    public async Task<IActionResult> DeleteUser(Guid id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
+        if (user == null)
+            return NotFound("User not found");
+
+        await _userRepository.DeleteAsync(user);
+        await _userRepository.SaveChangesAsync();
+
+        return NoContent();
     }
 }

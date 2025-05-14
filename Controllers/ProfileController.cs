@@ -93,12 +93,12 @@ namespace API.Controllers
         /// Atnaujina tik profilio nuotrauką.
         /// </summary>
         [HttpPut("profileimage")]
-        public async Task<IActionResult> UpdateImage([FromForm] IFormFile file)
+        public async Task<IActionResult> UpdateImage([FromForm] ProfileImageUpdateForm form)
         {
             var userId = GetUserId();
 
-            using var stream = file.OpenReadStream();
-            var imageBytes = await _imageService.ProcessImageAsync(stream, file.FileName);
+            using var stream = form.ProfileImage.OpenReadStream();
+            var imageBytes = await _imageService.ProcessImageAsync(stream, form.ProfileImage.FileName);
             await _personService.UpdateProfileImageAsync(userId, imageBytes);
 
             return Ok("Profile image updated.");
