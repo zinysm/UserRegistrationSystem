@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using UserRegistrations.Application.Interfaces;
 using UserRegistrations.Domain.Enums;
 using UserRegistrations.Domain.Interfaces;
 
@@ -11,10 +13,17 @@ namespace API.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
+    private readonly Guid _protectedAdminId;
 
-    public AdminController(IUserRepository userRepository)
+    public AdminController(IUserRepository userRepository, IUserService userService, IConfiguration configuration)
     {
         _userRepository = userRepository;
+        _userService = userService;
+        var adminIdString = configuration["AdminSeed:Id"];
+        if (string.IsNullOrWhiteSpace(adminIdString))
+            throw new Exception("AdminSeed:Id is not configured.");
+        _protectedAdminId = Guid.Parse(adminIdString);
     }
 
     [HttpGet("users")]
@@ -77,13 +86,14 @@ public class AdminController : ControllerBase
     [HttpDelete("user/{id}")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
-        var user = await _userRepository.GetByIdAsync(id);
-        if (user == null)
-            return NotFound("User not found");
-
-        await _userRepository.DeleteAsync(user);
-        await _userRepository.SaveChangesAsync();
-
-        return NoContent();
+        try
+        {
+            await _userService.DeleteUserAsync(id);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }

@@ -16,6 +16,7 @@ public class UserService : IUserService
     private readonly IJwtService _jwtService;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IConfiguration _configuration;
+    private readonly Guid _protectedAdminId;
 
     public UserService(
         IUserRepository userRepository,
@@ -31,6 +32,10 @@ public class UserService : IUserService
         _jwtService = jwtService;
         _passwordHasher = passwordHasher;
         _configuration = configuration;
+        var adminIdString = configuration["AdminSeed:Id"];
+        if (string.IsNullOrWhiteSpace(adminIdString))
+            throw new Exception("AdminSeed:Id is not configured.");
+        _protectedAdminId = Guid.Parse(adminIdString);
     }
 
     public async Task RegisterAsync(RegisterDto dto)
@@ -72,8 +77,7 @@ public class UserService : IUserService
         if (user == null)
             throw new Exception("User not found");
 
-        var protectedAdminId = Guid.Parse("3390b608-5cc0-4b11-af8f-b76092c37f19");
-        if (user.Id == protectedAdminId)
+        if (user.Id == _protectedAdminId)
             throw new Exception("The main administrator cannot be deleted.");
 
         if (user.Person?.Address != null)
